@@ -1,0 +1,39 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environmentName": {
+      "value": "${AZURE_ENV_NAME}"
+    },
+    "location": {
+      "value": "${AZURE_LOCATION}"
+    },
+    "principalId": {
+      "value": "${AZURE_PRINCIPAL_ID}"
+    },
+    "tz": {
+      "value": "${TZ}"
+    },
+    "appImage": {
+      "value": "${APP_IMAGE}"
+    },
+    "appDbUrlFormat": {
+      "value": "${APP_DB_URL_FORMAT}"
+    },
+    "appDbPass": {
+      "value": "$(secretOrRandomPassword ${AZURE_KEY_VAULT_NAME} appDbPass)"
+    },
+    "appSecretKeyBase": {
+      "value": "$(secretOrRandomPassword ${AZURE_KEY_VAULT_NAME} appSecretKeyBase)"
+    },
+    "msClientSecret": {
+      "value": "$(secretOrRandomPassword ${AZURE_KEY_VAULT_NAME} msClientSecret)"
+    },
+    "msTenantId": {
+      "value": "${MS_TENANT_ID}"
+    },
+    "msClientId": {
+      "value": "${MS_CLIENT_ID}"
+    }
+  }
+}
