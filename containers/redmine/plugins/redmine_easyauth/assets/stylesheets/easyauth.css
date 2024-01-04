@@ -1,0 +1,61 @@
+#easyauth-form {
+  margin: 2em auto;
+  padding: 20px;
+  width: 340px;
+  border: 1px solid #FDBF3B;
+  background-color: #FFEBC1;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+#easyauth-form label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+#easyauth-form a.btn {
+  display: inline-block;
+  margin-bottom: 5px;
+  padding: 8px;
+  vertical-align: middle;
+  line-height: 20px;
+  font-size: 14px;
+  border: 1px solid #e5e5e5;
+  background-color: #fff;
+  border-radius: 3px;
+  color: #2e2e2e;
+  user-select: none;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background-color 100ms linear, border-color 100ms linear, color 100ms linear, box-shadow 100ms linear;
+}
+
+#easyauth-form .btn:hover, .btn:focus {
+  background-color: #f0f0f0;
+  border-color: #e3e3e3;
+}
+
+#easyauth-form a.btn img {
+  margin-right: 16px;
+  vertical-align: middle;
+  width: 18px;
+  height: 18px;
+}
+
+#easyauth-announcement {
+  margin: 2em auto;
+  padding: 0px 20px;
+  width: 340px;
+  font-size: 1.1em;
+  border: 1px solid #9fcf9f;
+  background-color: #dfffdf;
+  border-radius: 4px;
+  color: #005f00;
+  box-sizing: border-box;
+}
+
+#easyauth-announcement a {
+  color: #c11;
+  text-decoration: none;
+}

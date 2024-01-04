@@ -1,0 +1,15 @@
+pg_restore
+--clean
+--if-exists
+<% if db.ssl %>
+--sslmode
+<%= db.params['sslmode'] %>
+<% end %>
+-h
+<%= db.host %>
+-p
+<%= db.port %>
+-U
+<%= db.uri_user%>
+-d
+<%= db.name %>

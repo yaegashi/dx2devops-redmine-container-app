@@ -1,0 +1,16 @@
+<p>
+  <%= label_tag nil, l('easyauth.setting.enabled') %>
+  <%= check_box_tag 'settings[enabled]', true, @settings['enabled'] %>
+</p>
+<p>
+  <%= label_tag nil, l('easyauth.setting.auto_registration') %>
+  <%= check_box_tag 'settings[auto_registration]', true, @settings['auto_registration'] %>
+</p>
+<p>
+  <%= label_tag nil, l('easyauth.setting.allowed_principal_list') %>
+  <%= text_field_tag 'settings[allowed_principal_list]', @settings['allowed_principal_list'], :size => 80 %>
+</p>
+<p>
+  <%= label_tag nil, l('easyauth.setting.announcement') %>
+  <%= text_area_tag "settings[announcement]", @settings['announcement'], :rows => 5 %>
+</p>

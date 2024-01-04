@@ -1,0 +1,17 @@
+ja:
+  easyauth:
+    label:
+      sign_in: サインイン
+      sign_in_easyauth: Easy Auth
+    error:
+      authentication_failed: Easy Auth 認証失敗しました
+      authentication_unavailable: Easy Auth 認証情報がありません
+      authentication_disallowed: Easy Auth 認証が許可されていません
+      auto_registration_disabled: Easy Auth 自動登録が無効です
+      auto_registration_failed: Easy Auth 自動登録が失敗しました
+      disabled: Easy Auth 認証が無効です
+    setting:
+      enabled: 有効
+      auto_registration: 自動登録
+      allowed_principal_list: 許可プリンシパルリスト
+      announcement: アナウンス

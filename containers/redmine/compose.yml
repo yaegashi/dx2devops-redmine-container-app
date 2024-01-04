@@ -1,0 +1,113 @@
+version: '3.9'
+
+x-redmine: &redmine
+  container_name: redmine
+  image: redmine
+  build: .
+  command: ['rails']
+  env_file:
+    - docker.env
+  ports:
+    - 8080:8080
+    - 3333:2222 # 2222 is used by Codespaces
+  volumes:
+    - ./data/wwwroot:/home/site/wwwroot
+
+x-sidekiq: &sidekiq
+  container_name: sidekiq
+  image: redmine
+  build: .
+  command: ['sidekiq']
+  env_file:
+    - docker.env
+  volumes:
+    - ./data/wwwroot:/home/site/wwwroot
+
+services:
+  redmine-sqlite:
+    <<: *redmine
+    environment:
+      DATABASE_URL: sqlite3:/home/site/wwwroot/redmine.sqlite3
+    depends_on: [redis]
+    profiles: [sqlite]
+
+  redmine-mysql:
+    <<: *redmine
+    environment:
+      DATABASE_URL: mysql2://redmineuser:redminesecret@mysql/redminedb?encoding=utf8mb4
+    depends_on: [mysql, redis]
+    profiles: [mysql]
+
+  redmine-mariadb:
+    <<: *redmine
+    environment:
+      DATABASE_URL: mysql2://redmineuser:redminesecret@mariadb/redminedb?encoding=utf8mb4
+    depends_on: [mariadb, redis]
+    profiles: [mariadb]
+
+  redmine-postgres:
+    <<: *redmine
+    environment:
+      DATABASE_URL: postgresql://redmineuser:redminesecret@postgres/redminedb
+    depends_on: [postgres, redis]
+    profiles: [postgres]
+  
+  sidekiq-sqlite:
+    <<: *sidekiq
+    environment:
+      DATABASE_URL: sqlite3:/home/site/wwwroot/redmine.sqlite3
+    depends_on: [redis]
+    profiles: [sqlite]
+
+  sidekiq-mysql:
+    <<: *sidekiq
+    environment:
+      DATABASE_URL: mysql2://redmineuser:redminesecret@mysql/redminedb?encoding=utf8mb4
+    depends_on: [mysql, redis]
+    profiles: [mysql]
+
+  sidekiq-mariadb:
+    <<: *sidekiq
+    environment:
+      DATABASE_URL: mysql2://redmineuser:redminesecret@mariadb/redminedb?encoding=utf8mb4
+    depends_on: [mariadb, redis]
+    profiles: [mariadb]
+
+  sidekiq-postgres:
+    <<: *sidekiq
+    environment:
+      DATABASE_URL: postgresql://redmineuser:redminesecret@postgres/redminedb
+    depends_on: [postgres, redis]
+    profiles: [postgres]
+
+  mysql:
+    container_name: redmine-db
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+    profiles: [mysql]
+
+  mariadb:
+    container_name: redmine-db
+    image: mariadb:latest
+    environment:
+      MARIADB_ROOT_PASSWORD: secret
+    volumes:
+      - ./data/mariadb:/var/lib/mysql
+    profiles: [mariadb]
+
+  postgres:
+    container_name: redmine-db
+    image: postgres:latest
+    environment:
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    profiles: [postgres]
+
+  redis:
+    image: redis:latest
+    volumes:
+      - ./data/redis:/data

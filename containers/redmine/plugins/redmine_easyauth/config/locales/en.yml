@@ -1,0 +1,17 @@
+en:
+  easyauth:
+    label:
+      sign_in: Sign in
+      sign_in_easyauth: Easy Auth
+    error:
+      authentication_failed: Easy Auth authentication failed
+      authentication_unavailable: Easy Auth authentication unavailable
+      authentication_disallowed: Easy Auth authentication disallowed
+      auto_registration_disabled: Easy Auth auto registration disabled
+      auto_registration_failed: Easy Auth auto registration failed
+      disabled: Easy Auth disabled
+    setting:
+      enabled: Enabled
+      auto_registration: Auto registration
+      allowed_principal_list: Allowed principal list
+      announcement: Announcement
