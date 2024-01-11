@@ -6,6 +6,7 @@ class RMOps::CLI
     RMOps::Tasks.create_symlinks
     RMOps::Tasks.initialize_secret_key_base
     RMOps::Tasks.initialize_database_config
+    RMOps::Tasks.migrate_database
     RMOps::Tasks.start_openssh_server
     RMOps::Tasks.start_rails_server
   rescue StandardError => e

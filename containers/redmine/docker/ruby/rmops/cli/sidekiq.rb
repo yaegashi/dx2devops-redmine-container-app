@@ -6,6 +6,7 @@ class RMOps::CLI
     RMOps::Tasks.create_symlinks
     RMOps::Tasks.initialize_secret_key_base
     RMOps::Tasks.initialize_database_config
+    RMOps::Tasks.migrate_database
     RMOps::Tasks.start_sidekiq
   rescue StandardError => e
     logger.fatal e.to_s

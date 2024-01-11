@@ -27,6 +27,7 @@ module RMOps::Tasks
 
   def migrate_database
     enter_dir do
+      run 'bundle install'
       run 'rake db:migrate'
       run 'rake redmine:plugins:migrate'
     end
