@@ -96,43 +96,42 @@ module RMOps::Tasks
   end
 
   def start_rails_server
-    mode = RMOps::Utils.env_get('rails')
-    logger.info "Rails operation mode: #{mode.inspect}"
-    case mode
-    when 'enable'
-      logger.info 'Starting rails server'
-      enter_dir do
-        File.unlink('tmp/pids/server.pid') if File.exist?('tmp/pids/server.pid')
-        run 'rails server -b 0.0.0.0 -p 8080'
-      end
-    when 'debug'
-      logger.info 'Starting debug server'
-      require 'webrick'
-      require 'stringio'
-      s = WEBrick::HTTPServer.new(Port: 8080)
-      s.mount_proc('/') do |req, res|
-        res.status = 200
-        res['Content-Type'] = 'text/plain'
-        res.body = StringIO.new
-        res.body.puts "self: #{req.addr.inspect}"
-        res.body.puts "peer: #{req.peeraddr.inspect}"
-        res.body.puts "#{req.request_method} #{req.unparsed_uri}"
-        res.body.puts req.raw_header.join
-        res.body.rewind
-      end
-      s.start
-    else
-      logger.info 'Starting static site server'
-      index_file = File.join(STATICSITE_DIR, 'index.html')
-      unless File.exist?(index_file)
-        File.open(index_file, 'w') do |file|
-          file.puts 'Maintenance mode'
-        end
-      end
-      require 'webrick'
-      s = WEBrick::HTTPServer.new(Port:8080, DocumentRoot: STATICSITE_DIR)
-      s.start
+    logger.info 'Starting rails server'
+    enter_dir do
+      File.unlink('tmp/pids/server.pid') if File.exist?('tmp/pids/server.pid')
+      run 'rails server -b 0.0.0.0 -p 8080'
     end
+  end
+
+  def start_debug_server
+    logger.info 'Starting debug server'
+    require 'webrick'
+    require 'stringio'
+    s = WEBrick::HTTPServer.new(Port: 8080)
+    s.mount_proc('/') do |req, res|
+      res.status = 200
+      res['Content-Type'] = 'text/plain'
+      res.body = StringIO.new
+      res.body.puts "self: #{req.addr.inspect}"
+      res.body.puts "peer: #{req.peeraddr.inspect}"
+      res.body.puts "#{req.request_method} #{req.unparsed_uri}"
+      res.body.puts req.raw_header.join
+      res.body.rewind
+    end
+    s.start
+  end
+
+  def start_staticsite_server
+    logger.info 'Starting static site server'
+    index_file = File.join(STATICSITE_DIR, 'index.html')
+    unless File.exist?(index_file)
+      File.open(index_file, 'w') do |file|
+        file.puts 'Maintenance mode'
+      end
+    end
+    require 'webrick'
+    s = WEBrick::HTTPServer.new(Port:8080, DocumentRoot: STATICSITE_DIR)
+    s.start
   end
 
   def start_sidekiq
@@ -149,6 +148,13 @@ module RMOps::Tasks
       loop do
         sleep 86400
       end
+    end
+  end
+
+  def start_sleep
+    logger.info 'Sleeping forever'
+    loop do
+      sleep 86400
     end
   end
 

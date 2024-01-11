@@ -7,10 +7,20 @@ class RMOps::CLI
     RMOps::Tasks.initialize_secret_key_base
     RMOps::Tasks.initialize_database_config
     RMOps::Tasks.migrate_database
-    RMOps::Tasks.start_openssh_server
-    RMOps::Tasks.start_rails_server
+
+    mode = RMOps::Utils.env_get('rails')
+    logger.info "Rails operation mode: #{mode.inspect}"
+    case mode
+    when 'enable'
+      RMOps::Tasks.start_rails_server
+    when 'debug'
+      RMOps::Tasks.start_debug_server
+    else
+      RMOps::Tasks.start_staticsite_server
+    end
   rescue StandardError => e
     logger.fatal e.to_s
+    RMOps::Tasks.start_staticsite_server
     exit 1
   end
 
