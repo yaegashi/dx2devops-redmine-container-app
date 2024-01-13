@@ -95,6 +95,41 @@ module RMOps::Tasks
     logger.warn 'Skip OpenSSH server'
   end
 
+  def start_standby_server(port = 8080)
+    logger.info 'Starting standby server'
+    pid = fork do
+      require 'webrick'
+      require 'stringio'
+      s = WEBrick::HTTPServer.new(Port: port)
+      s.mount_proc('/') do |req, res|
+        res.status = 503
+        res['Content-Type'] = 'text/html'
+        res['Retry-After'] = '10'
+        res.body = StringIO.new
+        res.body.puts <<-HTML
+        <!DOCTYPE html>
+        <html>
+        <head><meta http-equiv="refresh" content="10"></head>
+        <body><p>Starting service, please wait...</p></body>
+        </html>
+        HTML
+        res.body.rewind
+      end
+      trap('TERM') { s.shutdown }
+      s.start
+    end
+    if block_given?
+      begin
+        yield
+      ensure
+        Process.kill('TERM', pid)
+        Process.wait(pid)
+      end
+    else
+      pid
+    end
+  end
+
   def start_rails_server
     logger.info 'Starting rails server'
     enter_dir do
