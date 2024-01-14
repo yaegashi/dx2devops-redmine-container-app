@@ -131,6 +131,21 @@ resource containerApp 'Microsoft.App/containerApps@2023-08-01-preview' = {
             { name: 'DATABASE_URL', secretRef: 'database-url' }
             { name: 'SECRET_KEY_BASE', secretRef: 'secret-key-base' }
           ]
+          probes: [
+            {
+              type: 'Startup'
+              httpGet: {
+                path: '/'
+                port: 8080
+                scheme: 'HTTP'
+              }
+              initialDelaySeconds: 10
+              periodSeconds: 10
+              timeoutSeconds: 1
+              successThreshold: 1
+              failureThreshold: 30
+            }
+          ]
           volumeMounts: [
             {
               volumeName: 'data'
