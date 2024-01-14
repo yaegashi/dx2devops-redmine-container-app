@@ -146,6 +146,10 @@ resource containerApp 'Microsoft.App/containerApps@2023-08-01-preview' = {
               failureThreshold: 30
             }
           ]
+          resources: {
+            cpu: json('0.25')
+            memory: '0.5Gi'
+          }
           volumeMounts: [
             {
               volumeName: 'data'
@@ -163,6 +167,10 @@ resource containerApp 'Microsoft.App/containerApps@2023-08-01-preview' = {
             { name: 'RAILS_ENV', value: 'production' }
             { name: 'DATABASE_URL', secretRef: 'database-url' }
           ]
+          resources: {
+            cpu: json('0.25')
+            memory: '0.5Gi'
+          }
           volumeMounts: [
             {
               volumeName: 'data'
@@ -178,6 +186,10 @@ resource containerApp 'Microsoft.App/containerApps@2023-08-01-preview' = {
           env: [
             { name: 'TZ', value: tz }
           ]
+          resources: {
+            cpu: json('0.25')
+            memory: '0.5Gi'
+          }
           volumeMounts: [
             {
               volumeName: 'data'
