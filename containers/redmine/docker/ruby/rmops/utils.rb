@@ -55,6 +55,18 @@ module RMOps::Utils
     end
   end
 
+  def probe_server(server_url)
+    require 'uri'
+    require 'net/http'
+    uri = URI.parse(server_url)
+    Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == 'https') do |http|
+      http.request(Net::HTTP::Get.new(uri))
+    end
+    true
+  rescue StandardError
+    false
+  end
+
   def env_load
     if File.exist?(ENV_JSON)
       JSON.parse(File.read(ENV_JSON))

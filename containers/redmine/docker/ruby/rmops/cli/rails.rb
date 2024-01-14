@@ -6,9 +6,7 @@ class RMOps::CLI
     RMOps::Tasks.create_symlinks
     RMOps::Tasks.initialize_secret_key_base
     RMOps::Tasks.initialize_database_config
-    RMOps::Tasks.start_standby_server do
-      RMOps::Tasks.migrate_database
-    end
+    RMOps::Tasks.migrate_database
 
     mode = RMOps::Utils.env_get('rails')
     logger.info "Rails operation mode: #{mode.inspect}"

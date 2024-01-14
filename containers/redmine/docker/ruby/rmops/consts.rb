@@ -23,4 +23,5 @@ module RMOps::Consts
   PUBLIC_PLUGIN_ASSETS_DIR = File.join(WWWROOT_DIR, 'public/plugin_assets')
   DATABASE_URL = ENV['DATABASE_URL']
   DATABASE_SINGLE = make_bool(ENV['DATABASE_SINGLE'])
+  REDMINE_CONTAINER_URL = ENV['REDMINE_CONTAINER_URL'] || 'http://localhost:8080'
 end

@@ -170,19 +170,9 @@ module RMOps::Tasks
   end
 
   def start_sidekiq
-    mode = RMOps::Utils.env_get('sidekiq')
-    logger.info "Sidekiq operation mode: #{mode.inspect}"
-    case mode
-    when 'enable'
-      logger.info 'Starting sidekiq'
-      enter_dir do
-        run 'sidekiq'
-      end
-    else
-      logger.info 'Sleeping forever'
-      loop do
-        sleep 86400
-      end
+    logger.info 'Starting sidekiq'
+    enter_dir do
+      run 'sidekiq'
     end
   end
 
