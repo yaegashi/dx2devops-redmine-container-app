@@ -6,6 +6,7 @@ class RMOps::CLI
     RMOps::Tasks.create_symlinks
     RMOps::Tasks.initialize_secret_key_base
     RMOps::Tasks.initialize_database_config
+    RMOps::Tasks.bundle_install
     RMOps::Tasks.migrate_database
 
     mode = RMOps::Utils.env_get('rails')

@@ -6,6 +6,7 @@ class RMOps::CLI
     RMOps::Tasks.create_symlinks
     RMOps::Tasks.initialize_secret_key_base
     RMOps::Tasks.initialize_database_config
+    RMOps::Tasks.bundle_install
 
     mode = RMOps::Utils.env_get('sidekiq')
     logger.info "Sidekiq operation mode: #{mode.inspect}"
