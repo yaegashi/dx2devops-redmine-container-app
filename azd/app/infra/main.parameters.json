@@ -14,26 +14,17 @@
     "tz": {
       "value": "${TZ}"
     },
+    "sharedResourceGroupName": {
+      "value": "${SHARED_RESOURCE_GROUP_NAME}"
+    },
     "appImage": {
       "value": "${APP_IMAGE}"
     },
-    "appDbUrlFormat": {
-      "value": "${APP_DB_URL_FORMAT}"
-    },
     "appDbPass": {
-      "value": "$(secretOrRandomPassword ${AZURE_KEY_VAULT_NAME} appDbPass)"
+      "value": "$(secretOrRandomPassword ${AZURE_KEY_VAULT_NAME} APP-DB-PASS)"
     },
     "appSecretKeyBase": {
-      "value": "$(secretOrRandomPassword ${AZURE_KEY_VAULT_NAME} appSecretKeyBase)"
-    },
-    "msClientSecret": {
-      "value": "$(secretOrRandomPassword ${AZURE_KEY_VAULT_NAME} msClientSecret)"
-    },
-    "msTenantId": {
-      "value": "${MS_TENANT_ID}"
-    },
-    "msClientId": {
-      "value": "${MS_CLIENT_ID}"
+      "value": "$(secretOrRandomPassword ${AZURE_KEY_VAULT_NAME} APP-SECRET-KEY-BASE)"
     }
   }
 }

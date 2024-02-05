@@ -4,6 +4,7 @@ param location string = resourceGroup().location
 param tags object = {}
 param logAnalyticsWorkspaceName string
 param storageAccountName string
+param containerRegistryLoginServer string
 param appImage string
 param kvDatabase string
 param kvSecretKeyBase string
@@ -90,6 +91,12 @@ resource containerApp 'Microsoft.App/containerApps@2023-08-01-preview' = {
         external: true
         targetPort: 8080
       }
+      registries: [
+        {
+          server: containerRegistryLoginServer
+          identity: userAssignedIdentity.id
+        }
+      ]
       secrets: [
         {
           name: 'database-url'
@@ -200,7 +207,7 @@ resource containerApp 'Microsoft.App/containerApps@2023-08-01-preview' = {
         }
       ]
       scale: {
-        minReplicas: 0
+        minReplicas: 1
         maxReplicas: 1
       }
     }

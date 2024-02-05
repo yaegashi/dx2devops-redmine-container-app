@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+name: dx2devops-redmine-shared
+hooks:
+  postprovision:
+    continueOnError: false
+    interactive: false
+    shell: sh
+    run: |
+      az acr login --subscription ${AZURE_SUBSCRIPTION_ID} --name ${AZURE_CONTAINER_REGISTRY_NAME}
+      docker build ../../containers/redmine -t ${AZURE_CONTAINER_REGISTRY_IMAGE}
+      docker push ${AZURE_CONTAINER_REGISTRY_IMAGE}

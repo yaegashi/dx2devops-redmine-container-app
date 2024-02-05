@@ -14,13 +14,20 @@ param principalId string
 @allowed([ 'mysql', 'psql' ])
 param dbType string = 'mysql'
 param dbName string = ''
-param dbAdminUser string = ''
+param dbAdminUser string = 'adminuser'
 @secure()
 param dbAdminPass string
+
+param msTenantId string = ''
+param msClientId string = ''
+@secure()
+param msClientSecret string = ''
 
 param resourceGroupName string = ''
 
 param keyVaultName string = ''
+
+param containerRegistryName string = ''
 
 param logAnalyticsName string = ''
 
@@ -56,14 +63,27 @@ module keyVault './core/security/keyvault.bicep' = {
   }
 }
 
+var dbtags = 'mysql' == dbType ? mysql.outputs.tags : psql.outputs.tags
+
 module keyVaultSecretDbAdminPass './core/security/keyvault-secret.bicep' = {
   name: 'keyVaultSecretDbAdminPass'
   scope: rg
   params: {
-    name: 'dbAdminPass'
+    name: 'DB-ADMIN-PASS'
     tags: tags
     keyVaultName: keyVault.outputs.name
     secretValue: dbAdminPass
+  }
+}
+
+module keyVaultSecretMsClientSecret './core/security/keyvault-secret.bicep' = {
+  name: 'keyVaultSecretMsClientSecret'
+  scope: rg
+  params: {
+    name: 'MS-CLIENT-SECRET'
+    tags: tags
+    keyVaultName: keyVault.outputs.name
+    secretValue: msClientSecret
   }
 }
 
@@ -73,7 +93,7 @@ module mysql './app/mysql.bicep' = if (dbType == 'mysql') {
   params: {
     location: location
     dbName: !empty(dbName) ? dbName : '${abbrs.dBforMySQLServers}${resourceToken}'
-    dbAdminUser: !empty(dbAdminUser) ? dbAdminUser : 'adminuser'
+    dbAdminUser: dbAdminUser
     dbAdminPass: dbAdminPass
   }
 }
@@ -84,8 +104,19 @@ module psql './app/psql.bicep' = if (dbType == 'psql') {
   params: {
     location: location
     dbName: !empty(dbName) ? dbName : '${abbrs.dBforPostgreSQLServers}${resourceToken}'
-    dbAdminUser: !empty(dbAdminUser) ? dbAdminUser : 'adminuser'
+    dbAdminUser: dbAdminUser
     dbAdminPass: dbAdminPass
+  }
+}
+
+module containerRegistry './core/host/container-registry.bicep' = {
+  name: 'containerRegistry'
+  scope: rg
+  params: {
+    location: location
+    tags: tags
+    name: !empty(containerRegistryName) ? containerRegistryName : '${abbrs.containerRegistryRegistries}${resourceToken}'
+    workspaceId: monitoring.outputs.logAnalyticsWorkspaceId
   }
 }
 
@@ -106,14 +137,23 @@ module rgtags './app/tags.bicep' = {
   params: {
     name: rg.name
     location: rg.location
-    tags: union(rg.tags, dbType == 'mysql' ? mysql.outputs.tags : psql.outputs.tags)
+    tags: union(rg.tags, dbtags, {
+      MS_TENANT_ID: msTenantId
+      MS_CLIENT_ID: msClientId
+      KEY_VAULT_NAME: keyVault.outputs.name
+      CONTAINER_REGISTRY_NAME: containerRegistry.outputs.name
+      CONTAINER_REGISTRY_LOGIN_SERVER: containerRegistry.outputs.loginServer
+      CONTAINER_REGISTRY_IMAGE: '${containerRegistry.outputs.loginServer}/app'
+    })
   }
-} 
-
-var portalLink = 'https://portal.azure.com/${tenant().tenantId}'
+}
 
 output AZURE_LOCATION string = location
 output AZURE_TENANT_ID string = tenant().tenantId
+output AZURE_SUBSCRIPTION_ID string = subscription().subscriptionId
+output AZURE_RESOURCE_GROUP_NAME string = rg.name
 output AZURE_KEY_VAULT_NAME string = keyVault.outputs.name
 output AZURE_KEY_VAULT_ENDPOINT string = keyVault.outputs.endpoint
-output DB_TAGS object = dbType == 'mysql' ? mysql.outputs.tags : psql.outputs.tags
+output AZURE_CONTAINER_REGISTRY_NAME string = containerRegistry.outputs.name
+output AZURE_CONTAINER_REGISTRY_LOGIN_SERVER string = containerRegistry.outputs.loginServer
+output AZURE_CONTAINER_REGISTRY_IMAGE string = '${containerRegistry.outputs.loginServer}/app'
