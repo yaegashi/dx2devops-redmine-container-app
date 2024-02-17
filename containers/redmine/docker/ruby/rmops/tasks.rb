@@ -218,6 +218,13 @@ module RMOps::Tasks
     system(userurl.env, *args, exception: true)
   end
 
+  def symlink_directory(srcdir, tmpdir)
+    dstdir = File.join(tmpdir, File.basename(srcdir))
+    if File.directory?(srcdir)
+      symlink(srcdir, dstdir)
+    end
+  end
+
   def dump(name)
     name += '.tgz' unless name.end_with?('.tar.gz', '.tgz')
     tgzpath = File.expand_path(name, BACKUPS_DIR)
@@ -229,14 +236,22 @@ module RMOps::Tasks
       logger.info "Dump database to #{dbdump}"
       logger.info "Run #{args.inspect}"
       system(dburl.env, *args, exception: true, out: dbdump)
-      symlink(ETC_DIR, File.join(dir, 'etc'))
-      symlink(STATICSITE_DIR, File.join(dir, 'staticsite'))
-      symlink(FILES_DIR, File.join(dir, 'files'))
-      symlink(CONFIG_DIR, File.join(dir, 'config'))
-      symlink(PLUGINS_DIR, File.join(dir, 'plugins'))
-      symlink(PUBLIC_DIR, File.join(dir, 'public'))
+      symlink_directory(ETC_DIR, dir)
+      symlink_directory(STATICSITE_DIR, dir)
+      symlink_directory(FILES_DIR, dir)
+      symlink_directory(CONFIG_DIR, dir)
+      symlink_directory(PLUGINS_DIR, dir)
+      symlink_directory(PUBLIC_DIR, dir)
       run "tar -C #{dir} -f #{tgzpath} -czvvh --owner root --group root --mode a+rX,og-w ."
       logger.info "Done dump to #{tgzpath}"
+    end
+  end
+
+  def restore_directory(tmpdir, dstdir)
+    srcdir = File.join(tmpdir, File.basename(dstdir))
+    if File.directory?(srcdir)
+      rmtree([dstdir])
+      copytree(srcdir, dstdir)
     end
   end
 
@@ -247,16 +262,29 @@ module RMOps::Tasks
 
     Dir.mktmpdir do |dir|
       run "tar -C #{dir} -f #{tgzpath} -xzvv --no-same-owner --no-same-permissions"
-      rmtree([STATICSITE_DIR, FILES_DIR, CONFIG_DIR, PLUGINS_DIR, PUBLIC_DIR])
-      copytree(File.join(dir, 'etc'), ETC_DIR)
-      copytree(File.join(dir, 'staticsite'), STATICSITE_DIR)
-      copytree(File.join(dir, 'files'), FILES_DIR)
-      copytree(File.join(dir, 'config'), CONFIG_DIR)
-      copytree(File.join(dir, 'plugins'), PLUGINS_DIR)
-      copytree(File.join(dir, 'public'), PUBLIC_DIR)
+      restore_directory(dir, ETC_DIR)
+      restore_directory(dir, STATICSITE_DIR)
+      restore_directory(dir, FILES_DIR)
+      restore_directory(dir, CONFIG_DIR)
+      restore_directory(dir, PLUGINS_DIR)
+      restore_directory(dir, PUBLIC_DIR)
       dbdump = File.join(dir, 'db.dump')
       dburl = RMOps::DatabaseURL.new(DATABASE_URL)
       args = dburl.generate_restore
+
+      # Modify the database dump before restore
+      File.open(dbdump, 'r+') do |file|
+        sql = file.read
+        case dburl.db.type
+        when 'mysql2'
+          # Comment out variable settings to prevent "Access denied" error
+          sql.gsub!(/^SET @@SESSION.SQL_LOG_BIN=/, '-- \&')
+          sql.gsub!(/^SET @@GLOBAL.GTID_PURGED=/, '-- \&')
+        end
+        file.rewind
+        file.write(sql)
+      end
+
       logger.info "Restore database from #{dbdump}"
       logger.info "Run #{args.inspect}"
       system(dburl.env, *args, exception: true, in: dbdump)
