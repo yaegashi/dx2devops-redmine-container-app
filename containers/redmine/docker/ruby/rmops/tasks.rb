@@ -19,8 +19,11 @@ module RMOps::Tasks
       Dir.glob(File.join(PUBLIC_THEMES_DIR, '*')).each do |path|
         symlink(path, 'public/themes', force: true) if File.directory?(path)
       end
-      Dir.glob(File.join(CONFIG_DIR, '*')).each do |path|
-        symlink(path, 'config', force: true) if File.file?(path)
+      if File.exist?(CONFIG_LINK)
+        Dir.glob(File.join(CONFIG_DIR, '*')).each do |path|
+          next if path == CONFIG_LINK
+          symlink(path, 'config', force: true) if File.file?(path)
+        end
       end
     end
   end

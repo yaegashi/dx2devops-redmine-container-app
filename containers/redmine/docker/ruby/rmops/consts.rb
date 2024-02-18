@@ -17,6 +17,7 @@ module RMOps::Consts
   BACKUPS_DIR = File.join(WWWROOT_DIR, 'backups')
   FILES_DIR = File.join(WWWROOT_DIR, 'files')
   CONFIG_DIR = File.join(WWWROOT_DIR, 'config')
+  CONFIG_LINK = File.join(CONFIG_DIR, '.LINK')
   PLUGINS_DIR = File.join(WWWROOT_DIR, 'plugins')
   PUBLIC_DIR = File.join(WWWROOT_DIR, 'public')
   PUBLIC_THEMES_DIR = File.join(WWWROOT_DIR, 'public/themes')
