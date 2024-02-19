@@ -73,7 +73,7 @@ class EasyauthController < AccountController
     if user.new_record?
       unless settings['auto_registration']
         logger.info 'easyauth auto registration disabled'
-        flash['error'] = l('easyauth.error.authentication_disabled')
+        flash['error'] = l('easyauth.error.auto_registration_disabled')
         redirect_to signin_path
         return
       end
