@@ -117,7 +117,7 @@ module keyVaultSecretMsClientSecret './core/security/keyvault-secret.bicep' = {
 }
 
 var xTZ = !empty(tz) ? tz : 'Asia/Tokyo'
-var xAppImage = !empty(appImage) ? appImage : sharedRG.tags.CONTAINER_REGISTRY_IMAGE
+var xAppImage = !empty(appImage) ? appImage : '${sharedRG.tags.CONTAINER_REGISTRY_IMAGE}:${sharedRG.tags.CONTAINER_REGISTRY_TAG}'
 var xContainerAppsEnvironmentName = !empty(containerAppsEnvironmentName) ? containerAppsEnvironmentName : '${abbrs.appManagedEnvironments}${resourceToken}'
 var xContainerAppName = !empty(containerAppName) ? containerAppName : '${abbrs.appContainerApps}${resourceToken}'
 var appDbName = replace(xContainerAppName, '-', '_')
