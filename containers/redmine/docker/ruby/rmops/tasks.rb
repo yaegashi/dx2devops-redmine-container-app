@@ -34,6 +34,33 @@ module RMOps::Tasks
     end
   end
 
+  def install_plugin(url, branch=nil, dir=nil)
+    dir = File.basename(url) if dir.nil?
+    if File.directory?(dir)
+      run "git -C #{dir} remote update"
+      if branch
+        run "git -C #{dir} checkout -q #{branch}"
+      else
+        run "git -C #{dir} pull -q"
+      end
+    else
+      run "git clone -q --filter=blob:none #{url} #{dir}"
+      run "git -C #{dir} checkout -q #{branch}" if branch
+    end
+  end
+
+  def install_plugins
+    Dir.chdir(PLUGINS_DIR) do
+      install_plugin 'https://github.com/agileware-jp/redmine_issue_templates', 'v1.1.2'
+      install_plugin 'https://github.com/farend/redmine_message_customize', 'v1.0.0'
+      install_plugin 'https://github.com/onozaty/redmine-view-customize', 'v3.5.1', 'view_customize'
+      install_plugin 'https://github.com/redmica/redmica_ui_extension', 'v0.3.5'
+      install_plugin 'https://github.com/redmica/redmine_ip_filter', 'v0.0.2'
+      install_plugin 'https://github.com/redmica/redmine_issues_panel', 'v0.0.7'
+      install_plugin 'https://github.com/vividtone/redmine_vividtone_my_page_blocks', '1.2', 'redmine_vividtone_mypage_blocks'
+    end
+  end
+
   def migrate_database
     enter_dir do
       run 'rake db:migrate'
