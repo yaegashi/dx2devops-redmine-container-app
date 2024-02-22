@@ -1,17 +1,3 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
 
 name: dx2devops-redmine-shared
-hooks:
-  postprovision:
-    continueOnError: false
-    interactive: false
-    posix:
-      shell: sh
-      run: |
-        set -ex
-        TAG=$(date --utc +%Y%m%dT%H%M%SZ)
-        az acr login --subscription ${AZURE_SUBSCRIPTION_ID} --name ${AZURE_CONTAINER_REGISTRY_NAME}
-        docker build ../../containers/redmine -t ${AZURE_CONTAINER_REGISTRY_IMAGE}:${TAG}
-        docker push ${AZURE_CONTAINER_REGISTRY_IMAGE}:${TAG}
-        az group update -n ${AZURE_RESOURCE_GROUP_NAME} --set tags.CONTAINER_REGISTRY_TAG=${TAG}
-        azd env set AZURE_CONTAINER_REGISTRY_TAG ${TAG}
