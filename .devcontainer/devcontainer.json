@@ -24,7 +24,19 @@
 			"nodeGypDependencies": true,
 			"version": "lts",
 			"nvmVersion": "latest"
+		},
+		"ghcr.io/devcontainers/features/powershell:1": {
+			"version": "latest"
 		}
 	},
-	"postCreateCommand": "bash -x .devcontainer/install-dev-tools.sh"
+	"postCreateCommand": "bash -x .devcontainer/install-dev-tools.sh && pwsh .devcontainer/install-dev-tools.ps1",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-azuretools.vscode-bicep",
+				"ms-vscode.PowerShell",
+				"ms-vscode.vscode-node-azure-pack"
+			]
+		}
+	}
 }
