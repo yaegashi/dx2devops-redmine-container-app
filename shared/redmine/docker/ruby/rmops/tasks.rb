@@ -218,15 +218,9 @@ module RMOps::Tasks
     end
   end
 
-  def dbinit(url)
+  def dbinit(url, adminuser, adminpass)
     userurl = RMOps::DatabaseURL.new(url)
     sql = userurl.generate_dbsql
-
-    print 'Enter DB admin username: '
-    adminuser = STDIN.gets.chomp
-    print 'Enter DB admin password: '
-    adminpass = STDIN.noecho(&:gets).chomp
-    puts
     adminurl = RMOps::DatabaseURL.new(url, user: adminuser, pass: adminpass)
     args = adminurl.generate_cliadmin
 

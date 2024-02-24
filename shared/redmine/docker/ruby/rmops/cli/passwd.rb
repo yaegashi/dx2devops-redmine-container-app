@@ -1,6 +1,9 @@
 class RMOps::CLI
   desc 'passwd', 'Reset user password'
   def passwd(login)
+    RMOps::Tasks.create_symlinks
+    RMOps::Tasks.initialize_database_config
+    RMOps::Tasks.bundle_install
     RMOps::Tasks.reset_passwd(login)
     logger.info "Reset password for user #{login.inspect}"
     logger.info "The password was written in password.txt"

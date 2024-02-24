@@ -4,6 +4,8 @@ class RMOps::CLI
   desc 'setup', "Set up Redmine instance"
   def setup
     RMOps::Tasks.create_symlinks
+    RMOps::Tasks.initialize_database_config
+    RMOps::Tasks.bundle_install
     RMOps::Tasks.migrate_database
     unless RMOps::Tasks.default_admin_account_changed?
       login = 'admin'
