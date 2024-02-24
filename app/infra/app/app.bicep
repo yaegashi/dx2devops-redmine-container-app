@@ -2,7 +2,6 @@ param containerAppsEnvironmentName string
 param containerAppName string
 param location string = resourceGroup().location
 param tags object = {}
-param logAnalyticsWorkspaceName string
 param storageAccountName string
 param containerRegistryLoginServer string
 param appImage string
@@ -14,10 +13,6 @@ param msClientId string
 param userAssignedIdentityName string
 param tz string
 
-resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
-  name: logAnalyticsWorkspaceName
-}
-
 resource userAssignedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
   name: userAssignedIdentityName
 }
@@ -28,12 +23,6 @@ resource storage 'Microsoft.Storage/storageAccounts@2022-05-01' existing = {
     name: 'default'
     resource data 'containers' = {
       name: 'token-store'
-    }
-  }
-  resource fileService 'fileServices' = {
-    name: 'default'
-    resource data 'shares' = {
-      name: 'data'
     }
   }
 }
@@ -48,29 +37,10 @@ var sas = storage.listServiceSAS('2022-05-01', {
   }).serviceSasToken
 var sasUrl = 'https://${storage.name}.blob.${environment().suffixes.storage}/token-store?${sas}'
 
-resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2023-08-01-preview' = {
+resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2023-08-01-preview' existing = {
   name: containerAppsEnvironmentName
-  location: location
-  tags: tags
-  properties: {
-    appLogsConfiguration: {
-      destination: 'log-analytics'
-      logAnalyticsConfiguration: {
-        customerId: logAnalyticsWorkspace.properties.customerId
-        sharedKey: logAnalyticsWorkspace.listKeys().primarySharedKey
-      }
-    }
-  }
-  resource data 'storages' = {
+  resource data 'storages' existing = {
     name: 'data'
-    properties: {
-      azureFile: {
-        accessMode: 'ReadWrite'
-        accountName: storage.name
-        accountKey: storage.listKeys().keys[0].value
-        shareName: storage::fileService::data.name
-      }
-    }
   }
 }
 
@@ -249,7 +219,5 @@ resource containerApp 'Microsoft.App/containerApps@2023-08-01-preview' = {
 }
 
 output defaultDomain string = containerAppsEnvironment.properties.defaultDomain
-output envId string = containerAppsEnvironment.id
-output envName string = containerAppsEnvironment.name
-output appId string = containerApp.id
-output appName string = containerApp.name
+output id string = containerApp.id
+output name string = containerApp.name

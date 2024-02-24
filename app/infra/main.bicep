@@ -175,6 +175,18 @@ module monitoring './core/monitor/monitoring.bicep' = {
   }
 }
 
+module env './app/env.bicep' = {
+  name: 'env'
+  scope: rg
+  params: {
+    location: location
+    tags: tags
+    containerAppsEnvironmentName: xContainerAppsEnvironmentName
+    logAnalyticsWorkspaceName: monitoring.outputs.logAnalyticsWorkspaceName
+    storageAccountName: storageAccount.outputs.name
+  }
+}
+
 module app './app/app.bicep' = {
   dependsOn: [ KeyVaultAccess ]
   name: 'app'
@@ -182,23 +194,43 @@ module app './app/app.bicep' = {
   params: {
     location: location
     tags: tags
-    containerAppsEnvironmentName: xContainerAppsEnvironmentName
+    containerAppsEnvironmentName: env.outputs.name
     containerAppName: xContainerAppName
-    logAnalyticsWorkspaceName: monitoring.outputs.logAnalyticsWorkspaceName
     storageAccountName: storageAccount.outputs.name
     containerRegistryLoginServer: sharedRG.tags.CONTAINER_REGISTRY_LOGIN_SERVER
+    userAssignedIdentityName: userAssignedIdentity.outputs.name
     appImage: xAppImage
     kvDatabase: '${keyVault.outputs.endpoint}secrets/APP-DB-URL'
     kvSecretKeyBase: '${keyVault.outputs.endpoint}secrets/APP-SECRET-KEY-BASE'
     kvMsClientSecret: '${keyVault.outputs.endpoint}secrets/MS-CLIENT-SECRET'
-    userAssignedIdentityName: userAssignedIdentity.outputs.name
     msTenantId: sharedRG.tags.MS_TENANT_ID
     msClientId: sharedRG.tags.MS_CLIENT_ID
     tz: xTZ
   }
 }
 
+module job './app/job.bicep' = {
+  dependsOn: [ KeyVaultAccess ]
+  name: 'job'
+  scope: rg
+  params: {
+    location: location
+    tags: tags
+    containerAppsEnvironmentName: env.outputs.name
+    containerAppName: xContainerAppName
+    containerRegistryLoginServer: sharedRG.tags.CONTAINER_REGISTRY_LOGIN_SERVER
+    userAssignedIdentityName: userAssignedIdentity.outputs.name
+    appImage: xAppImage
+    kvDatabase: '${keyVault.outputs.endpoint}secrets/APP-DB-URL'
+    tz: xTZ
+  }
+}
+
 output AZURE_LOCATION string = location
 output AZURE_TENANT_ID string = tenant().tenantId
+output AZURE_RESOURCE_GROUP_NAME string = rg.name
 output AZURE_KEY_VAULT_NAME string = keyVault.outputs.name
 output AZURE_KEY_VAULT_ENDPOINT string = keyVault.outputs.endpoint
+output AZURE_CONTAINER_APPS_APP_NAME string = app.outputs.name
+output AZURE_CONTAINER_APPS_JOB_NAME string = job.outputs.name
+output AZURE_LOG_ANALYTICS_WORKSPACE_CUSTOMER_ID string = monitoring.outputs.logAnalyticsWorkspaceCustomerId
