@@ -7,10 +7,12 @@ param dbSkuTier string = 'Burstable'
 param dbSizeGB int = 32
 param dbVersion string = '15'
 param location string = resourceGroup().location
+param tags object = {}
 
 resource db 'Microsoft.DBforPostgreSQL/flexibleServers@2022-12-01' = {
   name: dbName
   location: location
+  tags: tags
   sku: {
     name: dbSkuName
     tier: dbSkuTier

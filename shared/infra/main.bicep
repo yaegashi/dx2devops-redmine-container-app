@@ -27,6 +27,8 @@ param resourceGroupName string = ''
 
 param keyVaultName string = ''
 
+param storageAccountName string = ''
+
 param containerRegistryName string = ''
 
 param logAnalyticsName string = ''
@@ -87,11 +89,34 @@ module keyVaultSecretMsClientSecret './core/security/keyvault-secret.bicep' = {
   }
 }
 
+module storageAccount './core/storage/storage-account.bicep' = {
+  name: 'storageAccount'
+  scope: rg
+  params: {
+    location: location
+    tags: tags
+    name: !empty(storageAccountName) ? storageAccountName : '${abbrs.storageStorageAccounts}${resourceToken}'
+  }
+}
+
+module secrets './app/secrets.bicep' = {
+  name: 'secrets'
+  scope: rg
+  params: {
+    location: location
+    tags: tags
+    storageAccountName: storageAccount.outputs.name
+    dbAdminUser: dbAdminUser
+    dbAdminPass: dbAdminPass
+  }
+}
+
 module mysql './app/mysql.bicep' = if (dbType == 'mysql') {
   scope: rg
   name: 'mysql'
   params: {
     location: location
+    tags: tags
     dbName: !empty(dbName) ? dbName : '${abbrs.dBforMySQLServers}${resourceToken}'
     dbAdminUser: dbAdminUser
     dbAdminPass: dbAdminPass
@@ -103,6 +128,7 @@ module psql './app/psql.bicep' = if (dbType == 'psql') {
   name: 'psql'
   params: {
     location: location
+    tags: tags
     dbName: !empty(dbName) ? dbName : '${abbrs.dBforPostgreSQLServers}${resourceToken}'
     dbAdminUser: dbAdminUser
     dbAdminPass: dbAdminPass
@@ -137,14 +163,17 @@ module rgtags './app/tags.bicep' = {
   params: {
     name: rg.name
     location: rg.location
-    tags: union(rg.tags, dbtags, {
-      MS_TENANT_ID: msTenantId
-      MS_CLIENT_ID: msClientId
-      KEY_VAULT_NAME: keyVault.outputs.name
-      CONTAINER_REGISTRY_NAME: containerRegistry.outputs.name
-      CONTAINER_REGISTRY_LOGIN_SERVER: containerRegistry.outputs.loginServer
-      CONTAINER_REGISTRY_IMAGE: '${containerRegistry.outputs.loginServer}/app'
-    })
+    tags: union(rg.tags, dbtags,
+      {
+        MS_TENANT_ID: msTenantId
+        MS_CLIENT_ID: msClientId
+        KEY_VAULT_NAME: keyVault.outputs.name
+        CONTAINER_REGISTRY_NAME: containerRegistry.outputs.name
+        CONTAINER_REGISTRY_LOGIN_SERVER: containerRegistry.outputs.loginServer
+        CONTAINER_REGISTRY_IMAGE: '${containerRegistry.outputs.loginServer}/app'
+        STORAGE_ACCOUNT_NAME: storageAccount.outputs.name
+      }
+    )
   }
 }
 
@@ -157,3 +186,4 @@ output AZURE_KEY_VAULT_ENDPOINT string = keyVault.outputs.endpoint
 output AZURE_CONTAINER_REGISTRY_NAME string = containerRegistry.outputs.name
 output AZURE_CONTAINER_REGISTRY_LOGIN_SERVER string = containerRegistry.outputs.loginServer
 output AZURE_CONTAINER_REGISTRY_IMAGE string = '${containerRegistry.outputs.loginServer}/app'
+output AZURE_STORAGE_ACCOUNT_NAME string = storageAccount.outputs.name

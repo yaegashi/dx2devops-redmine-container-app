@@ -7,10 +7,12 @@ param dbSkuTier string = 'Burstable'
 param dbSizeGB int = 32
 param dbVersion string = '8.0.21'
 param location string = resourceGroup().location
+param tags object = {}
 
 resource db 'Microsoft.DBforMySQL/flexibleServers@2021-12-01-preview' = {
   name: dbName
   location: location
+  tags: tags
   sku: {
     name: dbSkuName
     tier: dbSkuTier
