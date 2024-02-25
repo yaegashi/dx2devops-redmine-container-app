@@ -22,3 +22,7 @@ DX2 DevOps solution for [Redmine] or [RedMica] on [Azure Container Apps][ACA] us
 ### Authentication overview
 
 > ![](doc/assets/auth-diagram.png)
+
+### Deployment overview
+
+> ![](doc/assets/deployment-diagram.png)
