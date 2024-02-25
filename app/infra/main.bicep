@@ -35,6 +35,8 @@ param appDbPass string
 @secure()
 param appSecretKeyBase string
 
+param appRootPath string = '/'
+
 param tz string = 'Asia/Tokyo'
 
 param sharedResourceGroupName string
@@ -200,6 +202,7 @@ module app './app/app.bicep' = {
     containerRegistryLoginServer: sharedRG.tags.CONTAINER_REGISTRY_LOGIN_SERVER
     userAssignedIdentityName: userAssignedIdentity.outputs.name
     appImage: xAppImage
+    appRootPath: appRootPath
     kvDatabase: '${keyVault.outputs.endpoint}secrets/APP-DB-URL'
     kvSecretKeyBase: '${keyVault.outputs.endpoint}secrets/APP-SECRET-KEY-BASE'
     kvMsClientSecret: '${keyVault.outputs.endpoint}secrets/MS-CLIENT-SECRET'

@@ -25,6 +25,9 @@
     },
     "appSecretKeyBase": {
       "value": "$(secretOrRandomPassword ${AZURE_KEY_VAULT_NAME} APP-SECRET-KEY-BASE)"
+    },
+    "appRootPath": {
+      "value": "${APP_ROOT_PATH=/}"
     }
   }
 }

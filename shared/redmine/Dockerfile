@@ -18,7 +18,6 @@ RUN /docker/build2/run.sh
 COPY redmine /redmine/
 COPY plugins /redmine/plugins/
 COPY docker /docker/
-RUN ln -sf /docker/rmops /usr/local/bin
 RUN /docker/build3/run.sh
 
 ENTRYPOINT ["rmops"]

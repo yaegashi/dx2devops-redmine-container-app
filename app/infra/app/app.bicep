@@ -5,6 +5,7 @@ param tags object = {}
 param storageAccountName string
 param containerRegistryLoginServer string
 param appImage string
+param appRootPath string
 param kvDatabase string
 param kvSecretKeyBase string
 param kvMsClientSecret string
@@ -105,6 +106,7 @@ resource containerApp 'Microsoft.App/containerApps@2023-08-01-preview' = {
           env: [
             { name: 'TZ', value: tz }
             { name: 'RAILS_ENV', value: 'production' }
+            { name: 'RAILS_RELATIVE_URL_ROOT', value: appRootPath }
             { name: 'DATABASE_URL', secretRef: 'database-url' }
             { name: 'SECRET_KEY_BASE', secretRef: 'secret-key-base' }
           ]

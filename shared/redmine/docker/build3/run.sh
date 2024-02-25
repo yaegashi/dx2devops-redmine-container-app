@@ -2,6 +2,10 @@
 
 set -ex
 
+ln -sf /docker/rmops /usr/local/bin
+
+ln -sf /docker/build3/config.ru .
+
 cat <<EOF >config/sidekiq.yml
 ---
 :queues:
