@@ -4,15 +4,15 @@ class RMOps::CLI
     raise 'Not an entrypoint process (PID != 1)' if Process.pid != 1
 
     RMOps::Tasks.create_symlinks
-    RMOps::Tasks.initialize_secret_key_base
-    RMOps::Tasks.initialize_database_config
-    RMOps::Tasks.bundle_install
-    RMOps::Tasks.migrate_database
 
     mode = RMOps::Utils.env_get('rails')
     logger.info "Rails operation mode: #{mode.inspect}"
     case mode
     when 'enable'
+      RMOps::Tasks.initialize_secret_key_base
+      RMOps::Tasks.initialize_database_config
+      RMOps::Tasks.bundle_install
+      RMOps::Tasks.migrate_database
       RMOps::Tasks.start_rails_server
     when 'debug'
       RMOps::Tasks.start_debug_server

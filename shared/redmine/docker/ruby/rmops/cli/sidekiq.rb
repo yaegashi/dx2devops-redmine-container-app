@@ -4,9 +4,6 @@ class RMOps::CLI
     raise 'Not an entrypoint process (PID != 1)' if Process.pid != 1
 
     RMOps::Tasks.create_symlinks
-    RMOps::Tasks.initialize_secret_key_base
-    RMOps::Tasks.initialize_database_config
-    RMOps::Tasks.bundle_install
 
     mode = RMOps::Utils.env_get('sidekiq')
     logger.info "Sidekiq operation mode: #{mode.inspect}"
@@ -17,6 +14,8 @@ class RMOps::CLI
         break if RMOps::Utils.probe_server(REDMINE_CONTAINER_URL)
         sleep 10
       end
+      RMOps::Tasks.initialize_database_config
+      RMOps::Tasks.bundle_install
       RMOps::Tasks.start_sidekiq
     else
       RMOps::Tasks.start_sleep
