@@ -3,7 +3,7 @@
 set -e
 
 SITEDIR="/path/to/redmine"
-TGZPATH="/path/to/redmine-$(date +%Y%m%dT%H%M%S).tgz"
+TGZPATH="/path/to/redmine-$(date -u +%Y%m%dT%H%M%SZ).tgz"
 DBHOST="localhost"
 DBPORT="3306"
 DBUSER="redmine_user"
