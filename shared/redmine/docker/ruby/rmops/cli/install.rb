@@ -2,7 +2,7 @@ require 'fileutils'
 
 class RMOps::CLI
   desc 'install', 'Run bundle install'
-  def symlinks
+  def install
     RMOps::Tasks.create_symlinks
     RMOps::Tasks.initialize_database_config
     RMOps::Tasks.bundle_install
