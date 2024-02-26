@@ -105,7 +105,7 @@ run_portal() {
 
 run_open() {
 	msg 'Running Azure CLI...'
-	URL="https://$(az containerapp show -g $AZURE_RESOURCE_GROUP_NAME -n $AZURE_CONTAINER_APPS_APP_NAME --query properties.configuration.ingress.fqdn -o tsv)"
+	URL="https://$(az containerapp show -g $AZURE_RESOURCE_GROUP_NAME -n $AZURE_CONTAINER_APPS_APP_NAME --query properties.configuration.ingress.fqdn -o tsv)${APP_ROOT_PATH}"
 	msg "Opening $URL"
 	xdg-open "$URL"
 }
