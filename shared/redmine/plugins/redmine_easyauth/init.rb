@@ -2,11 +2,13 @@ require 'redmine'
 
 RedmineEasyauthViewListener
 
+AccountController.send(:helper, RedmineEasyauthHelper)
+
 Redmine::Plugin.register :redmine_easyauth do
   name 'Redmine Easy Auth plugin'
   author 'YAEGASHI Takeshi'
   description 'Authentication/registration plugin with Azure App Service Easy Auth'
-  version '0.0.1'
+  version '0.0.2'
   author_url 'https://github.com/yaegashi'
 
   settings default: {

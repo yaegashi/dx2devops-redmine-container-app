@@ -1,10 +1,21 @@
 <%= stylesheet_link_tag 'easyauth', plugin: 'redmine_easyauth' %>
 
+<% login, mail, claims = easyauth_claims %>
 <% if Setting.plugin_redmine_easyauth['enabled'] %>
   <%= content_tag :div, id: 'easyauth-form' do %>
-    <%= label_tag nil, l('easyauth.label.sign_in') %>
-    <%= link_to easyauth_signin_path, class: 'btn' do %>
-      <%= image_tag 'azure.png', plugin: 'redmine_easyauth' %><%= content_tag :span, l('easyauth.label.sign_in_easyauth') %>
+    <%= form_tag easyauth_signin_path, method: :get do %>
+      <%= label_tag nil do %>
+        <%= l('easyauth.field.login') %>
+        <%= link_to "/.auth/login/aad?prompt=select_account&post_login_redirect_uri=#{request.path}", class: 'account_switch' do %>
+          <%= l('easyauth.label.switch_account') %>
+        <% end %>
+      <% end %>
+      <%= text_field_tag nil, login, readonly: true %>
+      <%= label_tag nil do %>
+        <%= l('easyauth.field.mail') %>
+      <% end %>
+      <%= text_field_tag nil, mail, readonly: true %>
+      <%= submit_tag l('easyauth.label.login') %>
     <% end %>
   <% end %>
 <% end %>

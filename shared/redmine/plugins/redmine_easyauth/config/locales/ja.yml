@@ -1,8 +1,11 @@
 ja:
   easyauth:
+    field:
+      login: ログインID
+      mail: メールアドレス
     label:
-      sign_in: サインイン
-      sign_in_easyauth: Easy Auth
+      login: Easy Auth ログイン
+      switch_account: アカウント切り替え
     error:
       authentication_failed: Easy Auth 認証失敗しました
       authentication_unavailable: Easy Auth 認証情報がありません

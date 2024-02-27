@@ -1,8 +1,11 @@
 en:
   easyauth:
+    field:
+      login: Login
+      mail: Email
     label:
-      sign_in: Sign in
-      sign_in_easyauth: Easy Auth
+      login: Easy Auth Sign in
+      switch_account: Switch Account
     error:
       authentication_failed: Easy Auth authentication failed
       authentication_unavailable: Easy Auth authentication unavailable
