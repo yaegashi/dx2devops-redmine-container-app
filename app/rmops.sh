@@ -87,7 +87,7 @@ run_passwd() {
 }
 
 run_restart() {
-	rev=$(az containerapp show -g $AZURE_RESOURCE_GROUP_NAME -n $AZURE_CONTAINER_APPS_APP_NAME --query properties.latestReadyRevisionName -o tsv)
+	rev=$(az containerapp show -g $AZURE_RESOURCE_GROUP_NAME -n $AZURE_CONTAINER_APPS_APP_NAME --query properties.latestRevisionName -o tsv)
 	msg "Restarting revision $rev..."
 	az containerapp revision restart -g $AZURE_RESOURCE_GROUP_NAME -n $AZURE_CONTAINER_APPS_APP_NAME --revision $rev -o tsv
 }
@@ -115,7 +115,7 @@ run_show() {
 	az containerapp show -g $AZURE_RESOURCE_GROUP_NAME -n $AZURE_CONTAINER_APPS_APP_NAME
 }
 
-run_auth() {
+run_update_auth() {
 	msg 'Running Azure CLI...'
 	MS_CLIENT_ID=$(az containerapp auth microsoft show -g $AZURE_RESOURCE_GROUP_NAME -n $AZURE_CONTAINER_APPS_APP_NAME --query registration.clientId -o tsv)
 	FQDN=$(az containerapp show -g $AZURE_RESOURCE_GROUP_NAME -n $AZURE_CONTAINER_APPS_APP_NAME --query properties.configuration.ingress.fqdn -o tsv)
@@ -128,7 +128,20 @@ run_auth() {
 	msg "Updating new Redirect URIs:${NL}${URIS}"
 	confirm
 	az ad app update --id $MS_CLIENT_ID --web-redirect-uris ${URIS}
-	msg "Done"
+	msg 'Done'
+}
+
+run_update_image() {
+	msg 'Running Azure CLI...'
+	CONTAINER_REGISTRY_IMAGE=$(az group show -g $SHARED_RESOURCE_GROUP_NAME --query tags.CONTAINER_REGISTRY_IMAGE -o tsv)
+	CONTAINER_REGISTRY_TAG=$(az group show -g $SHARED_RESOURCE_GROUP_NAME --query tags.CONTAINER_REGISTRY_TAG -o tsv)
+	IMAGE="${CONTAINER_REGISTRY_IMAGE}:${CONTAINER_REGISTRY_TAG}"
+	msg "Updating new container image: $IMAGE"
+	confirm
+	rev=$(az containerapp show -g $AZURE_RESOURCE_GROUP_NAME -n $AZURE_CONTAINER_APPS_APP_NAME |
+		jq --arg i "$IMAGE" '.properties.template.containers |= map(if .name == "redmine" or .name == "sidekiq" then .image = $i else . end)' |
+		az containerapp update -g $AZURE_RESOURCE_GROUP_NAME -n $AZURE_CONTAINER_APPS_APP_NAME --yaml /dev/stdin --query properties.latestRevisionName -o tsv)
+	msg 'Done'
 }
 
 case "$1" in
@@ -168,9 +181,13 @@ case "$1" in
 		shift
 		run_show "$@"
 		;;
-	auth)
+	update-auth|auth)
 		shift
-		run_auth "$@"
+		run_update_auth "$@"
+		;;
+	update-image)
+		shift
+		run_update_image "$@"
 		;;
 	*)
 		msg "Usage:"
@@ -183,7 +200,8 @@ case "$1" in
 		msg "$0 portal"
 		msg "$0 open"
 		msg "$0 show"
-		msg "$0 auth"
+		msg "$0 update-auth"
+		msg "$0 update-image"
 		exit 1
 		;;
 esac
