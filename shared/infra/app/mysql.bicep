@@ -36,6 +36,13 @@ resource db 'Microsoft.DBforMySQL/flexibleServers@2021-12-01-preview' = {
       startIpAddress: '0.0.0.0'
     }
   }
+  resource config 'configurations' = {
+    name: 'transaction_isolation'
+    properties: {
+      value: 'READ-COMMITTED'
+      source: 'user-override'
+    }
+  }
 }
 
 output dbId string = db.id
