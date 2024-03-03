@@ -3,6 +3,7 @@
 set -e
 
 NL=$'\n'
+QUIET=0
 
 eval $(azd env get-values)
 
@@ -11,6 +12,9 @@ msg() {
 }
 
 confirm() {
+	case "$QUIET" in
+		1) return
+	esac
 	read -p ">>> Continue? [y/N] " -n 1 -r >&2
 	echo >&2
 	case "$REPLY" in
@@ -33,7 +37,7 @@ start_job() {
 	show_job $JOB_NAME
 }
 
-run_run() {
+cmd_run() {
 	if test $# -eq 0; then
 		msg 'Reading script from stdin...'
 		read -r -d '' SCRIPT
@@ -41,21 +45,25 @@ run_run() {
 		msg 'Reading script from arguments...'
 		SCRIPT="$*"
 	fi
+	confirm
 	start_job "$SCRIPT"
 }
 
-run_dbinit() {
+cmd_rmops_dbinit() {
+	msg 'Running Azure CLI...'
 	SHARED_STORAGE_ACCOUNT_NAME=$(az group show -g $SHARED_RESOURCE_GROUP_NAME --query tags.STORAGE_ACCOUNT_NAME -o tsv)
 	EXPIRY=$(date -u -d '5 minutes' '+%Y-%m-%dT%H:%MZ')
-	SAS=$(az storage container generate-sas --account-name $SHARED_STORAGE_ACCOUNT_NAME --name secrets --permissions r --expiry $EXPIRY --https-only --output tsv)
+	SAS=$(az storage container generate-sas --only-show-errors --account-name $SHARED_STORAGE_ACCOUNT_NAME --name secrets --permissions r --expiry $EXPIRY --https-only --output tsv)
 	URL="https://${SHARED_STORAGE_ACCOUNT_NAME}.blob.core.windows.net/secrets"
 
 	read -r -d '' SCRIPT <<-'EOF' || true
 	DB_ADMIN_USER=$(curl -s "$URL/DB_ADMIN_USER?$SAS")
 	DB_ADMIN_PASS=$(curl -s "$URL/DB_ADMIN_PASS?$SAS")
 	rmops dbinit "$DB_ADMIN_USER" "$DB_ADMIN_PASS"
-	tail -1 /home/site/wwwroot/etc/password.txt
 	EOF
+
+	msg 'Running rmops dbinit'
+	confirm	
 
 	msg 'Starting the job...'
 	JOB_NAME=$(az containerapp job show -g $AZURE_RESOURCE_GROUP_NAME -n $AZURE_CONTAINER_APPS_JOB_NAME --query properties.template |
@@ -66,15 +74,17 @@ run_dbinit() {
 	show_job $JOB_NAME
 }
 
-run_setup() {
+cmd_rmops_setup() {
 	read -r -d '' SCRIPT <<-EOF || true
 	rmops setup
 	tail -1 /home/site/wwwroot/etc/password.txt
 	EOF
+	msg 'Running rmops setup'
+	confirm
 	start_job "$SCRIPT"
 }
 
-run_passwd() {
+cmd_rmops_passwd() {
 	if test "$1" = ''; then
 		msg 'Specify login to reset password for'
 		exit 1
@@ -83,39 +93,12 @@ run_passwd() {
 	rmops passwd $1
 	tail -1 /home/site/wwwroot/etc/password.txt
 	EOF
+	msg "Resetting password for $1"
+	confirm
 	start_job "$SCRIPT"
 }
 
-run_restart() {
-	rev=$(az containerapp show -g $AZURE_RESOURCE_GROUP_NAME -n $AZURE_CONTAINER_APPS_APP_NAME --query properties.latestRevisionName -o tsv)
-	msg "Restarting revision $rev..."
-	az containerapp revision restart -g $AZURE_RESOURCE_GROUP_NAME -n $AZURE_CONTAINER_APPS_APP_NAME --revision $rev -o tsv
-}
-
-run_logs() {
-	msg 'Following logs...'
-	az containerapp logs show -g $AZURE_RESOURCE_GROUP_NAME -n $AZURE_CONTAINER_APPS_APP_NAME --format text --follow
-}
-
-run_portal() {
-	msg 'Opening Azure Portal'
-	URL="https://portal.azure.com/#@${AZURE_TENANT_ID}/resource/subscriptions/${AZURE_SUBSCRIPTION_ID}/resourceGroups/${AZURE_RESOURCE_GROUP_NAME}/providers/Microsoft.App/containerApps/${AZURE_CONTAINER_APPS_APP_NAME}"
-	xdg-open "$URL"
-}
-
-run_open() {
-	msg 'Running Azure CLI...'
-	URL="https://$(az containerapp show -g $AZURE_RESOURCE_GROUP_NAME -n $AZURE_CONTAINER_APPS_APP_NAME --query properties.configuration.ingress.fqdn -o tsv)${APP_ROOT_PATH}"
-	msg "Opening $URL"
-	xdg-open "$URL"
-}
-
-run_show() {
-	msg 'Running Azure CLI...'
-	az containerapp show -g $AZURE_RESOURCE_GROUP_NAME -n $AZURE_CONTAINER_APPS_APP_NAME
-}
-
-run_update_auth() {
+cmd_update_auth() {
 	msg 'Running Azure CLI...'
 	MS_CLIENT_ID=$(az containerapp auth microsoft show -g $AZURE_RESOURCE_GROUP_NAME -n $AZURE_CONTAINER_APPS_APP_NAME --query registration.clientId -o tsv)
 	FQDN=$(az containerapp show -g $AZURE_RESOURCE_GROUP_NAME -n $AZURE_CONTAINER_APPS_APP_NAME --query properties.configuration.ingress.fqdn -o tsv)
@@ -131,7 +114,7 @@ run_update_auth() {
 	msg 'Done'
 }
 
-run_update_image() {
+cmd_update_image() {
 	msg 'Running Azure CLI...'
 	CONTAINER_REGISTRY_IMAGE=$(az group show -g $SHARED_RESOURCE_GROUP_NAME --query tags.CONTAINER_REGISTRY_IMAGE -o tsv)
 	CONTAINER_REGISTRY_TAG=$(az group show -g $SHARED_RESOURCE_GROUP_NAME --query tags.CONTAINER_REGISTRY_TAG -o tsv)
@@ -144,64 +127,102 @@ run_update_image() {
 	msg 'Done'
 }
 
+cmd_show() {
+	msg 'Running Azure CLI...'
+	az containerapp show -g $AZURE_RESOURCE_GROUP_NAME -n $AZURE_CONTAINER_APPS_APP_NAME
+}
+
+cmd_logs() {
+	msg 'Following logs...'
+	az containerapp logs show -g $AZURE_RESOURCE_GROUP_NAME -n $AZURE_CONTAINER_APPS_APP_NAME --format text --follow
+}
+
+cmd_restart() {
+	rev=$(az containerapp show -g $AZURE_RESOURCE_GROUP_NAME -n $AZURE_CONTAINER_APPS_APP_NAME --query properties.latestRevisionName -o tsv)
+	msg "Restarting revision $rev..."
+	confirm
+	az containerapp revision restart -g $AZURE_RESOURCE_GROUP_NAME -n $AZURE_CONTAINER_APPS_APP_NAME --revision $rev -o tsv
+}
+
+cmd_portal() {
+	msg 'Opening Azure Portal'
+	URL="https://portal.azure.com/#@${AZURE_TENANT_ID}/resource/subscriptions/${AZURE_SUBSCRIPTION_ID}/resourceGroups/${AZURE_RESOURCE_GROUP_NAME}/providers/Microsoft.App/containerApps/${AZURE_CONTAINER_APPS_APP_NAME}"
+	xdg-open "$URL"
+}
+
+cmd_open() {
+	msg 'Running Azure CLI...'
+	URL="https://$(az containerapp show -g $AZURE_RESOURCE_GROUP_NAME -n $AZURE_CONTAINER_APPS_APP_NAME --query properties.configuration.ingress.fqdn -o tsv)${APP_ROOT_PATH}"
+	msg "Opening $URL"
+	xdg-open "$URL"
+}
+
+case "$1" in
+	--quiet|-q)
+		shift
+		QUIET=1
+		;;
+esac
+
 case "$1" in
 	run)
 		shift
-		run_run "$@"
+		cmd_run "$@"
 		;;
-	dbinit)
+	rmops-dbinit|setup)
 		shift
-		run_dbinit "$@"
+		cmd_rmops_dbinit "$@"
 		;;
-	setup)
+	rmops-setup|setup)
 		shift
-		run_setup "$@"
+		cmd_rmops_setup "$@"
 		;;
-	passwd)
+	rmops-passwd|passwd)
 		shift
-		run_passwd "$@"
-		;;
-	restart)
-		shift
-		run_restart "$@"
-		;;
-	logs)
-		shift
-		run_logs "$@"
-		;;
-	portal)
-		shift
-		run_portal "$@"
-		;;
-	open)
-		shift
-		run_open "$@"
-		;;
-	show)
-		shift
-		run_show "$@"
+		cmd_rmops_passwd "$@"
 		;;
 	update-auth|auth)
 		shift
-		run_update_auth "$@"
+		cmd_update_auth "$@"
 		;;
 	update-image)
 		shift
-		run_update_image "$@"
+		cmd_update_image "$@"
+		;;
+	show)
+		shift
+		cmd_show "$@"
+		;;
+	logs)
+		shift
+		cmd_logs "$@"
+		;;
+	restart)
+		shift
+		cmd_restart "$@"
+		;;
+	portal)
+		shift
+		cmd_portal "$@"
+		;;
+	open)
+		shift
+		cmd_open "$@"
 		;;
 	*)
-		msg "Usage:"
-		msg "$0 run [script]"
-		msg "$0 dbinit"
-		msg "$0 setup"
-		msg "$0 passwd <login>"
-		msg "$0 restart"
-		msg "$0 logs"
-		msg "$0 portal"
-		msg "$0 open"
-		msg "$0 show"
-		msg "$0 update-auth"
-		msg "$0 update-image"
+		msg "Usage: $0 [-q|--quiet] <command> [args...]"
+		msg "Commands:"
+		msg "  run [script]         - Run script in container"
+		msg "  rmops-dbinit         - Run rmops dbinit in container"
+		msg "  rmops-setup          - Run rmops setup in container"
+		msg "  rmops-passwd <login> - Run rmops passwd <login> in container"
+		msg "  update-auth          - Update redirect URIs in ME-ID app"
+		msg "  update-image         - Update container image"
+		msg "  show                 - Show app with Azure CLI"
+		msg "  logs                 - Show app logs with Azure CLI"
+		msg "  restart              - Restart app's running revision"
+		msg "  portal               - Open app in Azure Portal"
+		msg "  open                 - Open app in browser"
 		exit 1
 		;;
 esac
