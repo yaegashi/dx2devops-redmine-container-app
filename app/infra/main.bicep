@@ -236,4 +236,5 @@ output AZURE_KEY_VAULT_NAME string = keyVault.outputs.name
 output AZURE_KEY_VAULT_ENDPOINT string = keyVault.outputs.endpoint
 output AZURE_CONTAINER_APPS_APP_NAME string = app.outputs.name
 output AZURE_CONTAINER_APPS_JOB_NAME string = job.outputs.name
+output AZURE_STORAGE_ACCOUNT_NAME string = storageAccount.outputs.name
 output AZURE_LOG_ANALYTICS_WORKSPACE_CUSTOMER_ID string = monitoring.outputs.logAnalyticsWorkspaceCustomerId

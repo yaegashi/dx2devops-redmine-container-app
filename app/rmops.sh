@@ -127,6 +127,11 @@ cmd_update_image() {
 	msg 'Done'
 }
 
+cmd_download() {
+	msg 'Running Azure CLI...'
+	az storage file download --only-show-errors --account-name $AZURE_STORAGE_ACCOUNT_NAME -s data -p "$1" >/dev/null
+}
+
 cmd_show() {
 	msg 'Running Azure CLI...'
 	az containerapp show -g $AZURE_RESOURCE_GROUP_NAME -n $AZURE_CONTAINER_APPS_APP_NAME
@@ -189,6 +194,10 @@ case "$1" in
 		shift
 		cmd_update_image "$@"
 		;;
+	download)
+		shift
+		cmd_download "$@"
+		;;
 	show)
 		shift
 		cmd_show "$@"
@@ -218,6 +227,7 @@ case "$1" in
 		msg "  rmops-passwd <login> - Run rmops passwd <login> in container"
 		msg "  update-auth          - Update redirect URIs in ME-ID app"
 		msg "  update-image         - Update container image"
+		msg "  download             - Download file in data share"
 		msg "  show                 - Show app with Azure CLI"
 		msg "  logs                 - Show app logs with Azure CLI"
 		msg "  restart              - Restart app's running revision"
