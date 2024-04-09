@@ -127,9 +127,22 @@ cmd_update_image() {
 	msg 'Done'
 }
 
-cmd_download() {
+cmd_data_get() {
+	if test $# -lt 2; then
+		msg 'Specify remote/local paths'
+		exit 1
+	fi
 	msg 'Running Azure CLI...'
-	az storage file download --only-show-errors --account-name $AZURE_STORAGE_ACCOUNT_NAME -s data -p "$1" >/dev/null
+	az storage file download --only-show-errors --account-name $AZURE_STORAGE_ACCOUNT_NAME -s data -p "$1" --dest "$2" >/dev/null
+}
+
+cmd_data_put() {
+	if test $# -lt 2; then
+		msg 'Specify remote/local paths'
+		exit 1
+	fi
+	msg 'Running Azure CLI...'
+	az storage file upload --only-show-errors --account-name $AZURE_STORAGE_ACCOUNT_NAME -s data -p "$1" --source "$2" >/dev/null
 }
 
 cmd_show() {
@@ -194,9 +207,13 @@ case "$1" in
 		shift
 		cmd_update_image "$@"
 		;;
-	download)
+	data-get|download)
 		shift
-		cmd_download "$@"
+		cmd_data_get "$@"
+		;;
+	data-put|upload)
+		shift
+		cmd_data_put "$@"
 		;;
 	show)
 		shift
@@ -221,18 +238,19 @@ case "$1" in
 	*)
 		msg "Usage: $0 [-q|--quiet] <command> [args...]"
 		msg "Commands:"
-		msg "  run [script]         - Run script in container"
-		msg "  rmops-dbinit         - Run rmops dbinit in container"
-		msg "  rmops-setup          - Run rmops setup in container"
-		msg "  rmops-passwd <login> - Run rmops passwd <login> in container"
-		msg "  update-auth          - Update redirect URIs in ME-ID app"
-		msg "  update-image         - Update container image"
-		msg "  download             - Download file in data share"
-		msg "  show                 - Show app with Azure CLI"
-		msg "  logs                 - Show app logs with Azure CLI"
-		msg "  restart              - Restart app's running revision"
-		msg "  portal               - Open app in Azure Portal"
-		msg "  open                 - Open app in browser"
+		msg "  run [script]              - Run script in container"
+		msg "  rmops-dbinit              - Run rmops dbinit in container"
+		msg "  rmops-setup               - Run rmops setup in container"
+		msg "  rmops-passwd <login>      - Run rmops passwd <login> in container"
+		msg "  update-auth               - Update redirect URIs in ME-ID app"
+		msg "  update-image              - Update container image"
+		msg "  data-get <remote> <local> - Download file in data share"
+		msg "  data-put <remote> <local> - Upload file in data share"
+		msg "  show                      - Show app with Azure CLI"
+		msg "  logs                      - Show app logs with Azure CLI"
+		msg "  restart                   - Restart app's running revision"
+		msg "  portal                    - Open app in Azure Portal"
+		msg "  open                      - Open app in browser"
 		exit 1
 		;;
 esac
