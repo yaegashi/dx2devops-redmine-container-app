@@ -6,6 +6,8 @@ param storageAccountName string
 param containerRegistryLoginServer string
 param appImage string
 param appRootPath string
+param appCustomDomainName string = ''
+param appCustomDomainExists bool
 param kvDatabase string
 param kvSecretKeyBase string
 param kvMsClientSecret string
@@ -29,13 +31,16 @@ resource storage 'Microsoft.Storage/storageAccounts@2022-05-01' existing = {
 }
 
 // See https://learn.microsoft.com/en-us/rest/api/storagerp/storage-accounts/list-service-sas
-var sas = storage.listServiceSAS('2022-05-01', {
+var sas = storage.listServiceSAS(
+  '2022-05-01',
+  {
     canonicalizedResource: '/blob/${storage.name}/token-store'
     signedProtocol: 'https'
     signedResource: 'c'
     signedPermission: 'rwdl'
     signedExpiry: '3000-01-01T00:00:00Z'
-  }).serviceSasToken
+  }
+).serviceSasToken
 var sasUrl = 'https://${storage.name}.blob.${environment().suffixes.storage}/token-store?${sas}'
 
 resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2023-08-01-preview' existing = {
@@ -44,6 +49,18 @@ resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2023-08-01-
     name: 'data'
   }
 }
+
+resource certificate 'Microsoft.App/managedEnvironments/managedCertificates@2023-08-01-preview' =
+  if (!empty(appCustomDomainName) && appCustomDomainExists) {
+    parent: containerAppsEnvironment
+    name: '${containerAppsEnvironmentName}-certificate-${appCustomDomainName}'
+    location: location
+    tags: tags
+    properties: {
+      subjectName: appCustomDomainName
+      domainControlValidation: 'CNAME'
+    }
+  }
 
 resource containerApp 'Microsoft.App/containerApps@2023-08-01-preview' = {
   name: containerAppName
@@ -61,6 +78,15 @@ resource containerApp 'Microsoft.App/containerApps@2023-08-01-preview' = {
       ingress: {
         external: true
         targetPort: 8080
+        customDomains: empty(appCustomDomainName)
+          ? null
+          : [
+              {
+                name: appCustomDomainExists ? certificate.properties.subjectName : appCustomDomainName
+                certificateId: appCustomDomainExists ? certificate.id : null
+                bindingType: appCustomDomainExists ? 'SniEnabled' : 'Disabled'
+              }
+            ]
       }
       registries: [
         {
@@ -102,7 +128,7 @@ resource containerApp 'Microsoft.App/containerApps@2023-08-01-preview' = {
         {
           name: 'redmine'
           image: appImage
-          args: [ 'rails' ]
+          args: ['rails']
           env: [
             { name: 'TZ', value: tz }
             { name: 'RAILS_ENV', value: 'production' }
@@ -140,7 +166,7 @@ resource containerApp 'Microsoft.App/containerApps@2023-08-01-preview' = {
         {
           name: 'sidekiq'
           image: appImage
-          args: [ 'sidekiq' ]
+          args: ['sidekiq']
           env: [
             { name: 'TZ', value: tz }
             { name: 'RAILS_ENV', value: 'production' }
@@ -161,7 +187,7 @@ resource containerApp 'Microsoft.App/containerApps@2023-08-01-preview' = {
         {
           name: 'redis'
           image: 'redis'
-          args: [ 'redis-server', '--save', '60', '1', '--loglevel', 'warning' ]
+          args: ['redis-server', '--save', '60', '1', '--loglevel', 'warning']
           env: [
             { name: 'TZ', value: tz }
           ]
@@ -185,41 +211,43 @@ resource containerApp 'Microsoft.App/containerApps@2023-08-01-preview' = {
     }
   }
 
-  resource authConfigs 'authConfigs' = if (!empty(msTenantId) && !empty(msClientId)) {
-    name: 'current'
-    properties: {
-      identityProviders: {
-        azureActiveDirectory: {
-          registration: {
-            clientId: msClientId
-            clientSecretSettingName: 'microsoft-provider-authentication-secret'
-            openIdIssuer: 'https://sts.windows.net/${msTenantId}/v2.0'
-          }
-          validation: {
-            allowedAudiences: [
-              'api://${msClientId}'
-            ]
-          }
-          login: {
-            loginParameters: [ 'scope=openid profile email offline_access' ]
+  resource authConfigs 'authConfigs' =
+    if (!empty(msTenantId) && !empty(msClientId)) {
+      name: 'current'
+      properties: {
+        identityProviders: {
+          azureActiveDirectory: {
+            registration: {
+              clientId: msClientId
+              clientSecretSettingName: 'microsoft-provider-authentication-secret'
+              openIdIssuer: 'https://sts.windows.net/${msTenantId}/v2.0'
+            }
+            validation: {
+              allowedAudiences: [
+                'api://${msClientId}'
+              ]
+            }
+            login: {
+              loginParameters: ['scope=openid profile email offline_access']
+            }
           }
         }
-      }
-      platform: {
-        enabled: true
-      }
-      login: {
-        tokenStore: {
+        platform: {
           enabled: true
-          azureBlobStorage: {
-            sasUrlSettingName: 'token-store-url'
+        }
+        login: {
+          tokenStore: {
+            enabled: true
+            azureBlobStorage: {
+              sasUrlSettingName: 'token-store-url'
+            }
           }
         }
       }
     }
-  }
 }
 
-output defaultDomain string = containerAppsEnvironment.properties.defaultDomain
 output id string = containerApp.id
 output name string = containerApp.name
+output fqdn string = containerApp.properties.configuration.ingress.fqdn
+output appCustomDomainExists bool = containerApp.properties.configuration.ingress.customDomains != null
