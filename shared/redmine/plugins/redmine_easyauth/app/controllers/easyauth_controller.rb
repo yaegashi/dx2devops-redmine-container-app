@@ -72,7 +72,8 @@ class EasyauthController < AccountController
       successful_authentication(user)
       return
     end
-    account_pending
+
+    account_pending(user)
   end
 
   def settings
