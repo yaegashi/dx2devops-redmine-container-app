@@ -53,7 +53,7 @@ resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2023-08-01-
 resource certificate 'Microsoft.App/managedEnvironments/managedCertificates@2023-08-01-preview' =
   if (!empty(appCustomDomainName) && appCustomDomainExists) {
     parent: containerAppsEnvironment
-    name: '${containerAppsEnvironmentName}-certificate-${appCustomDomainName}'
+    name: 'cert-${appCustomDomainName}'
     location: location
     tags: tags
     properties: {
