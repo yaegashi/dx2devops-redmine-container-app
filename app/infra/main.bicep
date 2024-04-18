@@ -37,7 +37,7 @@ param appSecretKeyBase string
 
 param appRootPath string = '/'
 
-param appCustomDomainExists bool = false
+param appCertificateExists bool = false
 
 param tz string = 'Asia/Tokyo'
 
@@ -77,15 +77,15 @@ module sharedRegistryAccess './core/security/registry-access.bicep' = {
 }
 
 var dnsEnable = !empty(dnsZoneResourceGroupName) && !empty(dnsZoneName) && !empty(dnsRecordName)
-var appDomainName = dnsEnable ? '${dnsRecordName}.${dnsZoneName}' : ''
+var appCustomDomainName = dnsEnable ? '${dnsRecordName}.${dnsZoneName}' : ''
 
 resource dnsZoneRG 'Microsoft.Resources/resourceGroups@2021-04-01' existing =
-  if (dnsEnable) {
+  if (dnsEnable && !appCertificateExists) {
     name: dnsZoneResourceGroupName
   }
 
 module dnsTXT './app/dns-txt.bicep' =
-  if (dnsEnable) {
+  if (dnsEnable && !appCertificateExists) {
     name: 'dnsTXT'
     scope: dnsZoneRG
     params: {
@@ -96,13 +96,13 @@ module dnsTXT './app/dns-txt.bicep' =
   }
 
 module dnsCNAME './app/dns-cname.bicep' =
-  if (dnsEnable) {
+  if (dnsEnable && !appCertificateExists) {
     name: 'dnsCNAME'
     scope: dnsZoneRG
     params: {
       dnsZoneName: dnsZoneName
       dnsRecordName: dnsRecordName
-      cname: app.outputs.fqdn
+      cname: appPrep.outputs.fqdn
     }
   }
 
@@ -239,8 +239,22 @@ module env './app/env.bicep' = {
   }
 }
 
+module appPrep './app/app-prep.bicep' =
+  if (dnsEnable && !appCertificateExists) {
+    dependsOn: [dnsTXT]
+    name: 'appPrep'
+    scope: rg
+    params: {
+      location: location
+      tags: tags
+      containerAppsEnvironmentName: env.outputs.name
+      containerAppName: xContainerAppName
+      appCustomDomainName: appCustomDomainName
+    }
+  }
+
 module app './app/app.bicep' = {
-  dependsOn: [KeyVaultAccess, dnsTXT]
+  dependsOn: [KeyVaultAccess, dnsCNAME]
   name: 'app'
   scope: rg
   params: {
@@ -253,8 +267,7 @@ module app './app/app.bicep' = {
     userAssignedIdentityName: userAssignedIdentity.outputs.name
     appImage: xAppImage
     appRootPath: appRootPath
-    appCustomDomainName: appDomainName
-    appCustomDomainExists: appCustomDomainExists
+    appCustomDomainName: appCustomDomainName
     kvDatabase: '${keyVault.outputs.endpoint}secrets/APP-DB-URL'
     kvSecretKeyBase: '${keyVault.outputs.endpoint}secrets/APP-SECRET-KEY-BASE'
     kvMsClientSecret: '${keyVault.outputs.endpoint}secrets/MS-CLIENT-SECRET'
@@ -290,4 +303,4 @@ output AZURE_CONTAINER_APPS_APP_NAME string = app.outputs.name
 output AZURE_CONTAINER_APPS_JOB_NAME string = job.outputs.name
 output AZURE_STORAGE_ACCOUNT_NAME string = storageAccount.outputs.name
 output AZURE_LOG_ANALYTICS_WORKSPACE_CUSTOMER_ID string = monitoring.outputs.logAnalyticsWorkspaceCustomerId
-output APP_CUSTOM_DOMAIN_EXISTS bool = app.outputs.appCustomDomainExists
+output APP_CERTIFICATE_EXISTS bool = !empty(appCustomDomainName)

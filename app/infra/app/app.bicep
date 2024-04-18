@@ -7,7 +7,6 @@ param containerRegistryLoginServer string
 param appImage string
 param appRootPath string
 param appCustomDomainName string = ''
-param appCustomDomainExists bool
 param kvDatabase string
 param kvSecretKeyBase string
 param kvMsClientSecret string
@@ -51,7 +50,7 @@ resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2023-08-01-
 }
 
 resource certificate 'Microsoft.App/managedEnvironments/managedCertificates@2023-08-01-preview' =
-  if (!empty(appCustomDomainName) && appCustomDomainExists) {
+  if (!empty(appCustomDomainName)) {
     parent: containerAppsEnvironment
     name: 'cert-${appCustomDomainName}'
     location: location
@@ -82,9 +81,9 @@ resource containerApp 'Microsoft.App/containerApps@2023-08-01-preview' = {
           ? null
           : [
               {
-                name: appCustomDomainExists ? certificate.properties.subjectName : appCustomDomainName
-                certificateId: appCustomDomainExists ? certificate.id : null
-                bindingType: appCustomDomainExists ? 'SniEnabled' : 'Disabled'
+                name: appCustomDomainName
+                certificateId: certificate.id
+                bindingType: 'SniEnabled'
               }
             ]
       }
@@ -250,4 +249,4 @@ resource containerApp 'Microsoft.App/containerApps@2023-08-01-preview' = {
 output id string = containerApp.id
 output name string = containerApp.name
 output fqdn string = containerApp.properties.configuration.ingress.fqdn
-output appCustomDomainExists bool = containerApp.properties.configuration.ingress.customDomains != null
+output properties object = containerApp.properties

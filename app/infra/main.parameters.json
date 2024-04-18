@@ -29,8 +29,8 @@
     "appRootPath": {
       "value": "${APP_ROOT_PATH=/}"
     },
-    "appCustomDomainExists": {
-      "value": "${APP_CUSTOM_DOMAIN_EXISTS=false}"
+    "appCertificateExists": {
+      "value": "${APP_CERTIFICATE_EXISTS=false}"
     },
     "dnsZoneResourceGroupName": {
       "value": "${DNS_ZONE_RESOURCE_GROUP_NAME}"
