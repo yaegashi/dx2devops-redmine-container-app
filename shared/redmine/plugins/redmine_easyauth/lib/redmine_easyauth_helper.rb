@@ -49,9 +49,9 @@ module RedmineEasyauthHelper
       regexp, org = line.split(/\s+/, 2)
       next if regexp.blank? || org.blank?
       begin
-        r = Regexp.new(regexp)
+        r = Regexp.new(regexp, Regexp::IGNORECASE)
         if r.match(mail)
-          logger.info "easyauth mail_org_rules: match: #{mail.inspect}: #{r} => #{org.inspect}"
+          logger.info "easyauth mail_org_rules: match: #{mail.inspect}: #{r.inspect} => #{org.inspect}"
           return org
         end
       rescue RegexpError => e
