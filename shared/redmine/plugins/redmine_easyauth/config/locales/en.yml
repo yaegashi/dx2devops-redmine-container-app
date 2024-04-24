@@ -18,3 +18,6 @@ en:
       auto_registration: Auto registration
       allowed_principal_list: Allowed principal list
       announcement: Announcement
+      mail_org_rules: Mail to org rules
+    help:
+      mail_org_rules: Write regular expressions for email addresses and organization names separated by spaces on each line

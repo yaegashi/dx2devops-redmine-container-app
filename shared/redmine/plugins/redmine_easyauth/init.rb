@@ -8,7 +8,7 @@ Redmine::Plugin.register :redmine_easyauth do
   name 'Redmine Easy Auth plugin'
   author 'YAEGASHI Takeshi'
   description 'Authentication/registration plugin with Azure App Service Easy Auth'
-  version '0.0.2'
+  version '0.0.3'
   author_url 'https://github.com/yaegashi'
 
   settings default: {

@@ -14,3 +14,8 @@
   <%= label_tag nil, l('easyauth.setting.announcement') %>
   <%= text_area_tag "settings[announcement]", @settings['announcement'], :rows => 5 %>
 </p>
+<p>
+  <%= label_tag nil, l('easyauth.setting.mail_org_rules') %>
+  <%= text_area_tag "settings[mail_org_rules]", @settings['mail_org_rules'], :rows => 5, :placeholder => "# Comment\n@foo\\.example\\.com$ [FOO]\n@bar\\.example\\.org$ [BAR]" %>
+  <em class="info"><%= l('easyauth.help.mail_org_rules') %></em>
+</p>

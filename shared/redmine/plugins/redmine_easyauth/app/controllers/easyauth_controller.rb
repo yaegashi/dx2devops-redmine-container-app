@@ -51,7 +51,7 @@ class EasyauthController < AccountController
       user.login = (claims.fetch('preferred_username', []) + [name]).first
       user.mail = name
       user.firstname = (claims.fetch('name', []) + [name]).first
-      user.lastname = 'User'
+      user.lastname =  easyauth_mail_org_translate(name) || EASYAUTH_MAIL_ORG_RULE_DEFAULT
       user.admin = false
       user.register
       user.activate

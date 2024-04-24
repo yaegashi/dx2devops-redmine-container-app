@@ -39,4 +39,26 @@ module RedmineEasyauthHelper
 
     [login, name, claims]
   end
+
+  EASYAUTH_MAIL_ORG_RULE_DEFAULT = '[User]'
+
+  def easyauth_mail_org_translate(mail)
+    Setting.plugin_redmine_easyauth['mail_org_rules'].to_s.each_line do |line|
+      line.strip!
+      next if line.blank? || line.start_with?('#')
+      regexp, org = line.split(/\s+/, 2)
+      next if regexp.blank? || org.blank?
+      begin
+        r = Regexp.new(regexp)
+        if r.match(mail)
+          logger.info "easyauth mail_org_rules: match: #{mail.inspect}: #{r} => #{org.inspect}"
+          return org
+        end
+      rescue RegexpError => e
+        logger.error "easyauth mail_org_rules: error: #{e}"
+      end
+    end
+    logger.info "easyauth mail_org_rules: no match: #{mail.inspect}"
+    nil
+  end
 end
